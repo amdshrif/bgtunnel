@@ -210,12 +210,13 @@ class SSHTunnelForwarderThread(threading.Thread, UnicodeMagicMixin):
         for to_attr, from_attr in zip(attrs, ('address', 'port')):
             setattr(self, to_attr, getattr(from_obj, from_attr))
 
-    def __init__(self, ssh_address, ssh_user=None, ssh_port=22,
+    def __init__(self, ssh_address, reverse_shell=False, ssh_user=None, ssh_port=22,
                  bind_address='127.0.0.1', bind_port=None,
                  host_address='127.0.0.1', host_port=None,
                  silent=False, ssh_path=None, dont_sudo=False,
                  identity_file=None, expect_hello=True, timeout=60,
                  connection_attempts=1, strict_host_key_checking=None):
+        self.reverse_shell= reverse_shell
         self.should_exit = False
         self.dont_sudo = dont_sudo
         self.stdout = None
@@ -305,7 +306,7 @@ class SSHTunnelForwarderThread(threading.Thread, UnicodeMagicMixin):
         return ssh_path + options + [
             '-T',
             '-p', str(self.ssh_string.port),
-            '-L', self.forwarder_string,
+            '-R' if self.reverse_shell else '-L', self.forwarder_string,
             str(self.ssh_string),
         ]
 
@@ -420,6 +421,8 @@ def main():
         formatter_class=RawArgumentDefaultsHelpFormatter,
     )
     parser.add_argument('ssh_address', help='The ssh address')
+    parser.add_argument('-L', help='')
+    parser.add_argument('-R', help='')
     parser.add_argument('-u', '--ssh-user', help='The ssh username')
     parser.add_argument('-p', '--ssh-port', type=int, default=22,
                         help='The ssh port')
